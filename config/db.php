@@ -11,23 +11,7 @@ function getDatabase(): PDO
     $user     = getenv('DB_USER');
     $password = getenv('DB_PASSWORD');
 
-    // 1) On cherche ca.pem à plusieurs endroits possibles sur Vercel
-    $candidats = [
-        dirname(__DIR__) . '/certs/ca.pem',
-        __DIR__ . '/../certs/ca.pem',
-        getcwd() . '/certs/ca.pem',
-        '/var/task/user/certs/ca.pem',s
-    ];
-    $caPath = null;
-    foreach ($candidats as $c) {
-        if (is_readable($c) && filesize($c) > 500) {
-            $caPath = $c;
-            break;
-        }
-    }
-    if ($caPath === null) {
-        throw new RuntimeException('ca.pem introuvable. Cherche dans : ' . implode(' | ', $candidats));
-    }
+    $caPath = dirname(__DIR__) . '/certs/ca.pem';
 
     $dsn = "mysql:host=$host;port=$port;dbname=$name;charset=utf8mb4";
 
@@ -45,3 +29,9 @@ function getDatabase(): PDO
 
     return new PDO($dsn, $user, $password, $options);
 }
+
+
+
+
+
+
