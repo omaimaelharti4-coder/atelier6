@@ -1,5 +1,9 @@
 <?php
 
+// On empêche PHP d'afficher des warnings qui casseraient le JSON.
+ini_set('display_errors', '0');
+error_reporting(E_ALL & ~E_DEPRECATED);
+
 function getDatabase(): PDO
 {
     $host     = getenv('DB_HOST');
@@ -12,13 +16,18 @@ function getDatabase(): PDO
 
     $dsn = "mysql:host=$host;port=$port;dbname=$name;charset=utf8mb4";
 
+    $newApi    = class_exists('Pdo\Mysql');
+    $sslCa     = $newApi ? \Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA;
+    $sslVerify = $newApi ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT;
+
     $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
-        PDO::MYSQL_ATTR_SSL_CA       => $caPath,
-        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+        $sslCa                       => $caPath,
+        $sslVerify                   => true,
     ];
 
     return new PDO($dsn, $user, $password, $options);
 }
+?>
