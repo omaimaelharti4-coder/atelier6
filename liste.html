@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Liste des inscrits</title>
+  <title>Liste des stagiaires</title>
   <style>
     :root {
       --bg: #f4f6f8;
@@ -105,7 +105,7 @@
   <div class="conteneur">
     <header>
       <div>
-        <h1>Liste des inscrits</h1>
+        <h1>Liste des stagiaires</h1>
         <div class="compteur" id="compteur"></div>
       </div>
       <a class="lien" href="index.html">S'inscrire</a>
@@ -121,7 +121,7 @@
   </div>
 
   <script>
-    // Le navigateur appelle seulement l'API PHP (api/liste.php) ;
+    // Le navigateur appelle seulement l'API PHP (/api/liste.php) ;
     // les photos sont chargées directement depuis les URL Cloudinary.
     const LIMITE = 12;
     const zone = document.getElementById('zone');
@@ -141,6 +141,7 @@
       div.textContent = texte;
       zone.appendChild(div);
     }
+
     function formaterDate(valeur) {
       if (!valeur) return '';
       // MySQL renvoie "YYYY-MM-DD HH:MM:SS"
@@ -156,16 +157,16 @@
       return p;
     }
 
-    function creerCarte(i) {
+    function creerCarte(s) {
       const carte = document.createElement('article');
       carte.className = 'carte';
 
       const img = document.createElement('img');
       img.loading = 'lazy';
-      img.alt = 'Photo de ' + i.prenom + ' ' + i.nom;
+      img.alt = 'Photo de ' + s.prenom + ' ' + s.nom;
       // On n'accepte que des URL https (celles de Cloudinary).
-      if (typeof i.photo_url === 'string' && i.photo_url.startsWith('https://')) {
-        img.src = i.photo_url;
+      if (typeof s.photo === 'string' && s.photo.startsWith('https://')) {
+        img.src = s.photo;
       }
       img.addEventListener('error', () => { img.removeAttribute('src'); });
       carte.appendChild(img);
@@ -174,13 +175,12 @@
       infos.className = 'infos';
 
       const titre = document.createElement('h2');
-      titre.textContent = i.prenom + ' ' + i.nom;
+      titre.textContent = s.prenom + ' ' + s.nom;
       infos.appendChild(titre);
 
-      infos.appendChild(ligne(i.email));
-      if (i.telephone) infos.appendChild(ligne(i.telephone));
+      if (s.ville) infos.appendChild(ligne(s.ville));
 
-      const date = ligne('Inscrit le ' + formaterDate(i.created_at));
+      const date = ligne('Inscrit le ' + formaterDate(s.date_inscription));
       date.className = 'date';
       infos.appendChild(date);
 
@@ -193,15 +193,24 @@
       pagination.hidden = true;
 
       try {
-        const reponse = await fetch('api/liste.php?page=' + page + '&limite=' + LIMITE, {
+        const reponse = await fetch('/api/liste.php?page=' + page + '&limite=' + LIMITE, {
           headers: { 'Accept': 'application/json' }
         });
 
-        let resultat = {};
-        try { resultat = await reponse.json(); } catch (_) {}
+        const texte = await reponse.text();
+        let resultat = null;
+        try {
+          resultat = JSON.parse(texte);
+        } catch (_) {
+          // La réponse n'est pas du JSON valide (erreur PHP, code source affiché...)
+          console.error('Réponse non JSON :', texte);
+        }
 
-        if (!reponse.ok || !resultat.success) {
-          afficherEtat(resultat.message  || 'Erreur lors du chargement (code ' + reponse.status + ').', true);
+        if (!reponse.ok || !resultat || !resultat.success) {
+          const msg = resultat && resultat.message
+            ? resultat.message
+            : 'Réponse invalide du serveur (code ' + reponse.status + '). Ouvrez la console (F12) pour les détails.';
+          afficherEtat(msg, true);
           compteur.textContent = '';
           return;
         }
@@ -210,16 +219,16 @@
         pageCourante = meta.page;
         pagesTotal = Math.max(1, meta.pages);
 
-        compteur.textContent = meta.total + (meta.total > 1 ? ' inscrits' : ' inscrit');
+        compteur.textContent = meta.total + (meta.total > 1 ? ' stagiaires' : ' stagiaire');
 
         if (data.length === 0) {
-          afficherEtat("Aucune inscription pour l'instant.");
+          afficherEtat("Aucun stagiaire pour l'instant.");
           return;
         }
 
         const grille = document.createElement('div');
         grille.className = 'grille';
-        data.forEach(i => grille.appendChild(creerCarte(i)));
+        data.forEach(s => grille.appendChild(creerCarte(s)));
         zone.replaceChildren(grille);
 
         infoPage.textContent = 'Page ' + pageCourante + ' / ' + pagesTotal;
