@@ -200,8 +200,8 @@
         let resultat = {};
         try { resultat = await reponse.json(); } catch (_) {}
 
-        if (!reponse.ok  !resultat.success) {
-          afficherEtat(resultat.message  'Erreur lors du chargement (code ' + reponse.status + ').', true);
+        if (!reponse.ok || !resultat.success) {
+          afficherEtat(resultat.message  || 'Erreur lors du chargement (code ' + reponse.status + ').', true);
           compteur.textContent = '';
           return;
         }
