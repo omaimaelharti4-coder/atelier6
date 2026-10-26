@@ -61,3 +61,6 @@ try {
     // TEMPORAIRE : pour voir l'erreur réelle
     repondre(500, ['success' => false, 'message' => 'DEBUG: ' . $e->getMessage()]);
 }
+if (!is_readable($caPath)) {
+    throw new RuntimeException('ca.pem introuvable : ' . $caPath);
+}
