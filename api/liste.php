@@ -58,5 +58,6 @@ try {
     ]);
 } catch (Throwable $e) {
     error_log('[liste.php] ' . $e::class . ' : ' . $e->getMessage());
-    repondre(500, ['success' => false, 'message' => 'Une erreur interne est survenue. Réessayez plus tard.']);
+    // TEMPORAIRE : pour voir l'erreur réelle
+    repondre(500, ['success' => false, 'message' => 'DEBUG: ' . $e->getMessage()]);
 }
